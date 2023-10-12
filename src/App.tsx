@@ -55,7 +55,8 @@ const annotation2: AnnotationOptions = {
 };
 
 export const options = {
-  responsive: true,
+  // responsive: true,
+  maintainAspectRatio: false,
   plugins: {
     legend: {
       position: 'top' as const,
@@ -106,8 +107,14 @@ function App() {
   });
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <h1>Back Testing</h1>
       <DateRangePicker onChange={(date) => setDateRange(date as DateRange<Date> | null)} />
+      <div style={{width:'100%', height:'50%'}}>
       <Line options={options} data={data} />
+      </div>
+      <div style={{width:'100%', height:'50%'}}>
+      <Line options={options} data={data} />
+      </div>
     </LocalizationProvider>
   );
 }
