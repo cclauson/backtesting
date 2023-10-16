@@ -19,6 +19,8 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateRange, DateRangePicker } from '@mui/x-date-pickers-pro';
 import Annotation, { AnnotationOptions } from 'chartjs-plugin-annotation';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import { NumberLiteralType } from 'typescript';
+import { StockData } from './StockData';
 
 ChartJS.register(
   CategoryScale,
@@ -88,27 +90,22 @@ export const data = {
   ],
 };
 
+const initialDateRange: DateRange<Date> = [new Date('August 28, 2023'), new Date('October 28, 2023')];
+
 function App() {
-  const [dateRange, setDateRange] = React.useState<DateRange<Date> | null>(null);
+  const [dateRange, setDateRange] = React.useState<DateRange<Date> | null>(initialDateRange);
+  const [stockData, setStockData] = React.useState<StockData | null>(null);
   React.useEffect(() => {
     (async () => {
-      // https://create-react-app.dev/docs/using-the-public-folder/
-      const response = await fetch(`${process.env.PUBLIC_URL}/MSFT_full_1hour_adjsplit.txt`)
-      const responseText = await response.text();
-      const responseLines = responseText.split("\r\n");
-      for (let line of responseLines) {
-        // Data is in the format : { DateTime (yyyy-MM-dd HH:mm:ss), Open, High, Low, Close, Volume}  
-        // - Volume Numbers are in individual shares
-        // - Timestamps run from the start of the period (eg 1min bars stamped 09:30 run from 09:30.00 to 09:30.59)
-        // - Times with zero volume are omitted (thus gaps in the data sequence are when there have been no trades)
-        // console.log(line);
-      }
+      const stockDataI = new StockData();
+      await stockDataI.initialize();
+      setStockData(stockDataI);
     })();
-  });
+  }, []);
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <h1>Back Testing</h1>
-      <DateRangePicker onChange={(date) => setDateRange(date as DateRange<Date> | null)} />
+      <DateRangePicker defaultValue={initialDateRange} onChange={(date) => setDateRange(date as DateRange<Date> | null)} />
       <div style={{width:'100%', height:'50%'}}>
       <Line options={options} data={data} />
       </div>
