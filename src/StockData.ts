@@ -6,9 +6,14 @@ export interface PeriodPriceData {
     volume: number
 }  
 
+export interface DataSegment {
+    dates: Date[];
+    prices: PeriodPriceData[];
+}
+
 export class StockData {
-    private initialDate: Date | undefined;
-    private priceData: PeriodPriceData[] = [];
+    private dates: Date[] = [];
+    private prices: PeriodPriceData[] = [];
 
     constructor() {}
 
@@ -25,7 +30,6 @@ export class StockData {
       const response = await fetch(`${process.env.PUBLIC_URL}/MSFT_full_1hour_adjsplit.txt`)
       const responseText = await response.text();
       const responseLines = responseText.split("\r\n");
-      let lastDate: Date | undefined;
       for (let line of responseLines) {
         // Data is in the format : { DateTime (yyyy-MM-dd HH:mm:ss), Open, High, Low, Close, Volume}  
         // - Volume Numbers are in individual shares
@@ -40,15 +44,23 @@ export class StockData {
           low: parseFloat(fields[3]),
           volume: parseInt(fields[5])
         }
-        if (!lastDate) {
-            this.initialDate = date;
-        } else {
-            if (!this.isTradingHourAfter(lastDate, date)) {
-                // throw new Error(`${lastDate} not trading hour before ${date}`);
+        this.dates.push(date);
+        this.prices.push(periodPriceData);
+      }
+    }
+
+    public getDataForDateRange(startDate: Date, endDate: Date): DataSegment {
+        const dataSegment: DataSegment = {
+            dates: [],
+            prices: []
+        }
+        for (let i = 0; i < this.dates.length; ++i) {
+            const date = this.dates[i];
+            if (date.getTime() > startDate.getTime() && date.getTime() < endDate.getTime()) {
+                dataSegment.dates.push(date);
+                dataSegment.prices.push(this.prices[i]);
             }
         }
-        lastDate = date;
-        this.priceData.push(periodPriceData);
-      }
+        return dataSegment;
     }
 }
